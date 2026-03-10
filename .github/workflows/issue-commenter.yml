@@ -1,0 +1,33 @@
+
+name: Issue Commenter
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on new bug issue
+        if: github.event.label.name == 'bug'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Thank you. We will fix it.
+
+      - name: Comment on new feature issue
+        if: github.event.label.name == 'feature'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Thank you, we will consider to include this feature.
+
+      - name: Comment on new discussion issue
+        if: github.event.label.name == 'discussion'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Thanks for starting this discussion! We welcome community input.
