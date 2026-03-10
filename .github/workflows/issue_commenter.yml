@@ -1,17 +1,19 @@
 name: Issue Commenter
-
 on:
   issues:
-    types: [opened, labeled]
+    types: [labeled]
 
 jobs:
-  comment:
+  add-comment:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
-      - name: Add comment for "bug" label
-        if: contains(github.event.issue.labels.*.name, 'bug')
+      - name: Add comment for bug
+        if: github.event.label.name == 'bug'
         uses: actions/github-script@v6
         with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -19,10 +21,11 @@ jobs:
               repo: context.repo.repo,
               body: 'Thank you. We will fix it.'
             })
-      - name: Add comment for "feature" label
-        if: contains(github.event.issue.labels.*.name, 'feature')
+      - name: Add comment for feature
+        if: github.event.label.name == 'feature'
         uses: actions/github-script@v6
         with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
@@ -30,10 +33,11 @@ jobs:
               repo: context.repo.repo,
               body: 'Thank you, we will consider to include this feature.'
             })
-      - name: Add comment for "discussion" label
-        if: contains(github.event.issue.labels.*.name, 'discussion')
+      - name: Add comment for discussion
+        if: github.event.label.name == 'discussion'
         uses: actions/github-script@v6
         with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             github.rest.issues.createComment({
               issue_number: context.issue.number,
