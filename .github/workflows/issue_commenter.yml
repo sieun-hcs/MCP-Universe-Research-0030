@@ -1,34 +1,45 @@
 
-name: Auto Comment on New Issue
-
+name: Issue Label Commenter
 on:
   issues:
-    types: [labeled]
-
-permissions:
-  issues: write
+    types: [opened, labeled]
 
 jobs:
   add-comment:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Add comment for bug
-        if: github.event.label.name == 'bug'
-        uses: peter-evans/create-or-update-comment@v4
+        if: contains(github.event.issue.labels.*.name, 'bug')
+        uses: actions/github-script@v6
         with:
-          issue-number: ${{ github.event.issue.number }}
-          body: Thank you. We will fix it.
-
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Thank you. We will fix it.'
+            })
       - name: Add comment for feature
-        if: github.event.label.name == 'feature'
-        uses: peter-evans/create-or-update-comment@v4
+        if: contains(github.event.issue.labels.*.name, 'feature')
+        uses: actions/github-script@v6
         with:
-          issue-number: ${{ github.event.issue.number }}
-          body: Thank you, we will consider to include this feature.
-
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Thank you, we will consider to include this feature.'
+            })
       - name: Add comment for discussion
-        if: github.event.label.name == 'discussion'
-        uses: peter-evans/create-or-update-comment@v4
+        if: contains(github.event.issue.labels.*.name, 'discussion')
+        uses: actions/github-script@v6
         with:
-          issue-number: ${{ github.event.issue.number }}
-          body: Thanks for starting this discussion! We welcome community input.
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Thanks for starting this discussion! We welcome community input.'
+            })
