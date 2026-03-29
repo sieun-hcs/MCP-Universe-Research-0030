@@ -2,7 +2,7 @@
 name: Issue Commenter
 on:
   issues:
-    types: [opened]
+    types: [opened, labeled]
 
 jobs:
   comment:
@@ -13,22 +13,35 @@ jobs:
         with:
           script: |
             const issue = context.payload.issue;
-            const labels = issue.labels.map(label => label.name);
+            const labelName = context.payload.label ? context.payload.label.name : null;
             let commentBody = '';
 
-            if (labels.includes('bug')) {
+            // Determine comment based on the label that triggered the event or existing labels
+            const labels = issue.labels.map(l => l.name);
+            const targetLabel = labelName || labels.find(l => ['bug', 'feature', 'discussion'].includes(l));
+
+            if (targetLabel === 'bug') {
               commentBody = 'Thank you. We will fix it.';
-            } else if (labels.includes('feature')) {
+            } else if (targetLabel === 'feature') {
               commentBody = 'Thank you, we will consider to include this feature.';
-            } else if (labels.includes('discussion')) {
+            } else if (targetLabel === 'discussion') {
               commentBody = 'Thanks for starting this discussion! We welcome community input.';
             }
 
             if (commentBody) {
-              await github.rest.issues.createComment({
+              const { data: comments } = await github.rest.issues.listComments({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 issue_number: issue.number,
-                body: commentBody
               });
+              const alreadyCommented = comments.some(comment => comment.user.login === 'github-actions[bot]' && comment.body === commentBody);
+
+              if (!alreadyCommented) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  body: commentBody
+                });
+              }
             }
