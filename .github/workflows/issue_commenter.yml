@@ -1,45 +1,34 @@
 
-name: Issue Label Commenter
+name: Issue Commenter
 on:
   issues:
-    types: [opened, labeled]
+    types: [opened]
 
 jobs:
-  add-comment:
+  comment:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
     steps:
-      - name: Add comment for bug
-        if: contains(github.event.issue.labels.*.name, 'bug')
+      - name: Comment on new issue
         uses: actions/github-script@v6
         with:
           script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'Thank you. We will fix it.'
-            })
-      - name: Add comment for feature
-        if: contains(github.event.issue.labels.*.name, 'feature')
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'Thank you, we will consider to include this feature.'
-            })
-      - name: Add comment for discussion
-        if: contains(github.event.issue.labels.*.name, 'discussion')
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: 'Thanks for starting this discussion! We welcome community input.'
-            })
+            const issue = context.payload.issue;
+            const labels = issue.labels.map(label => label.name);
+            let commentBody = '';
+
+            if (labels.includes('bug')) {
+              commentBody = 'Thank you. We will fix it.';
+            } else if (labels.includes('feature')) {
+              commentBody = 'Thank you, we will consider to include this feature.';
+            } else if (labels.includes('discussion')) {
+              commentBody = 'Thanks for starting this discussion! We welcome community input.';
+            }
+
+            if (commentBody) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: commentBody
+              });
+            }
